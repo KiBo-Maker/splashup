@@ -22,10 +22,6 @@ plugins {
     // native allineate a 16 KB e Kotlin integrato (Built-in Kotlin).
     // Richiede Gradle >= 9.1 (wrapper aggiornato) e JDK 17 per il build.
     id("com.android.application") version "9.0.1" apply false
-    // START: FlutterFire Configuration
-    // DISATTIVATO insieme a Firebase (vedi commento in app/build.gradle.kts)
-    // id("com.google.gms.google-services") version("4.5.0") apply false
-    // END: FlutterFire Configuration
     // RIMOSSO org.jetbrains.kotlin.android: da AGP 9 il Kotlin è integrato
     // nell'Android Gradle Plugin (migrazione "Built-in Kotlin" richiesta
     // dal warning di Flutter).

@@ -20,8 +20,10 @@ SplashUp is a Flutter app built for swim coaches who want to time athletes in th
 - **Stopwatch with splits**: start, stop, and record lap times with configurable haptic and sound feedback, and keep the screen on while using it.
 - **Splits analysis**: dedicated charts to visualize time trends across training sessions and races.
 - **Works offline**: data is stored in a local database (Sembast), no connection required.
+- **Backup and restore**: export teams, athletes and times to a JSON file wherever you like (including a folder synced with your own cloud) and restore them on another device.
 - **Customization and accessibility**: light/dark/system theme, 6 color palettes, adjustable text size, and OpenDyslexic font for users with dyslexia.
 - **Multi-language**: interface available in Italian and English, following the system language or set manually.
+- **Update check**: the app tells you when a new version is released on GitHub. It is the only internet connection the app makes, and it can be turned off.
 
 ## Screenshots
 
@@ -40,6 +42,8 @@ SplashUp is a Flutter app built for swim coaches who want to time athletes in th
 - [Sembast](https://pub.dev/packages/sembast) as local database
 - [fl_chart](https://pub.dev/packages/fl_chart) for charts
 - [shared_preferences](https://pub.dev/packages/shared_preferences) for user settings
+- [file_selector](https://pub.dev/packages/file_selector) and [flutter_file_dialog](https://pub.dev/packages/flutter_file_dialog) for backup/restore through the system dialogs
+- [http](https://pub.dev/packages/http) to read the public releases on GitHub
 
 ## Getting started
 
@@ -57,10 +61,17 @@ lib/
 ├── models/       # Data models (athlete, team, timing)
 ├── repositories/ # Local database access
 ├── screens/      # App screens
-├── services/     # Services (theme, language, stopwatch settings)
+├── services/     # Services (theme, language, stopwatch, backup, updates)
 ├── l10n/         # Localization files (it/en)
 └── utils/        # Various utilities
 ```
+
+## Build and releases
+
+Every push to `main` runs `flutter analyze` and `flutter test` on GitHub Actions.
+Pushing a `vX.Y.Z` tag builds a signed release APK and attaches it to a draft GitHub
+Release, ready to review and publish. See [.github/workflows](.github/workflows) and
+[CONTRIBUTING.en.md](CONTRIBUTING.en.md#publishing-a-release).
 
 ## Changelog
 

@@ -313,5 +313,115 @@
   "info": "Info",
   "appVersion": "Version",
   "openSourceLicenses": "Open source licenses",
-  "timePrecisionDescription": "Display only: times are always saved to the hundredth."
+  "timePrecisionDescription": "Display only: times are always saved to the hundredth.",
+  "backupSection": "Backup and restore",
+  "exportBackup": "Export backup",
+  "exportBackupDescription": "Save teams, athletes and times to a JSON file, in the folder you choose.",
+  "importBackup": "Restore from backup",
+  "importBackupDescription": "Replaces all current data with the contents of the file you pick.",
+  "backupCancelled": "Operation cancelled.",
+  "backupExportSuccess": "Backup saved — teams: {teams}, athletes: {athletes}, times: {chronos}.",
+  "@backupExportSuccess": {
+    "placeholders": {
+      "teams": {
+        "type": "int"
+      },
+      "athletes": {
+        "type": "int"
+      },
+      "chronos": {
+        "type": "int"
+      }
+    }
+  },
+  "backupExportFailed": "Backup failed.",
+  "restoreConfirmTitle": "Replace all data?",
+  "restoreConfirmBody": "The file contains — teams: {teams}, athletes: {athletes}, times: {chronos}.\n\nEverything currently on this device will be deleted and replaced. This cannot be undone.",
+  "@restoreConfirmBody": {
+    "placeholders": {
+      "teams": {
+        "type": "int"
+      },
+      "athletes": {
+        "type": "int"
+      },
+      "chronos": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreConfirmAction": "Replace",
+  "restoreSuccess": "Restore complete — teams: {teams}, athletes: {athletes}, times: {chronos}.",
+  "@restoreSuccess": {
+    "placeholders": {
+      "teams": {
+        "type": "int"
+      },
+      "athletes": {
+        "type": "int"
+      },
+      "chronos": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreSkipped": "Orphaned records skipped: {count}.",
+  "@restoreSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreFailedInvalidFile": "This file is not a SplashUp backup.",
+  "restoreFailedNewerVersion": "This backup was created by a newer version of SplashUp. Update the app and try again.",
+  "restoreFailedCorrupted": "The backup file is damaged or incomplete.",
+  "restoreFailedGeneric": "Restore failed. Your existing data has not been changed.",
+  "checkForUpdates": "Check for updates",
+  "checkForUpdatesDescription": "Ask GitHub whether a newer version has been released.",
+  "autoCheckUpdates": "Check on startup",
+  "autoCheckUpdatesDescription": "Once a day at most. This is the only internet connection SplashUp makes: it reads the public release on GitHub and sends no data.",
+  "updateAvailableTitle": "SplashUp {version} is available",
+  "@updateAvailableTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateReleaseNotes": "What’s new",
+  "updateWhereToDownload": "Download the update from GitHub and install it the same way you installed the app.",
+  "updateDownloadApk": "Download APK",
+  "updateOpenPage": "Open on GitHub",
+  "updateLater": "Later",
+  "updateUpToDate": "You already have the latest version ({version}).",
+  "@updateUpToDate": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateErrorNetwork": "Could not reach GitHub. Check your connection and try again.",
+  "updateErrorRateLimit": "Too many requests to GitHub in a short time. Try again later.",
+  "updateErrorNoRelease": "No release has been published on GitHub yet.",
+  "updateErrorGeneric": "Update check failed.",
+  "updateOpenLinkFailed": "Could not open the link. Go to github.com/mattileap/splashup/releases.",
+  "restoreConfirmBodyWithDropped": "The file contains — teams: {teams}, athletes: {athletes}, times: {chronos}.\n\nCareful: {dropped} records in the file are orphaned (athletes with no team, or times with no athlete) and will NOT be restored.\n\nEverything currently on this device will be deleted and replaced. This cannot be undone.",
+  "@restoreConfirmBodyWithDropped": {
+    "placeholders": {
+      "teams": {
+        "type": "int"
+      },
+      "athletes": {
+        "type": "int"
+      },
+      "chronos": {
+        "type": "int"
+      },
+      "dropped": {
+        "type": "int"
+      }
+    }
+  }
 }

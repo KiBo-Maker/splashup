@@ -20,8 +20,10 @@ SplashUp è un'app Flutter pensata per allenatori di nuoto che vogliono cronomet
 - **Cronometro con parziali**: avvia, ferma e prendi i tempi di passaggio ("giri") con feedback aptico e sonoro configurabili, e schermo sempre acceso durante l'uso.
 - **Analisi dei parziali**: grafici dedicati per visualizzare l'andamento dei tempi nel corso di allenamenti e gare.
 - **Funziona offline**: i dati sono salvati in un database locale (Sembast), nessuna connessione richiesta.
+- **Backup e ripristino**: esporta squadre, atleti e tempi in un file JSON dove vuoi tu (anche in una cartella sincronizzata col tuo cloud) e ripristinali su un altro dispositivo.
 - **Personalizzazione ed accessibilità**: tema chiaro/scuro/automatico, 6 palette colore, dimensione del testo regolabile e font OpenDyslexic per utenti con dislessia.
 - **Multilingua**: interfaccia disponibile in italiano e inglese, con possibilità di seguire la lingua di sistema o sceglierla manualmente.
+- **Controllo aggiornamenti**: l'app ti avvisa quando su GitHub esce una versione nuova. È l'unica connessione a internet che fa, e si può disattivare.
 
 ## Screenshot
 
@@ -40,6 +42,8 @@ SplashUp è un'app Flutter pensata per allenatori di nuoto che vogliono cronomet
 - [Sembast](https://pub.dev/packages/sembast) come database locale
 - [fl_chart](https://pub.dev/packages/fl_chart) per i grafici
 - [shared_preferences](https://pub.dev/packages/shared_preferences) per le impostazioni utente
+- [file_selector](https://pub.dev/packages/file_selector) e [flutter_file_dialog](https://pub.dev/packages/flutter_file_dialog) per il backup/ripristino tramite i dialog di sistema
+- [http](https://pub.dev/packages/http) per leggere le release pubbliche su GitHub
 
 ## Per iniziare
 
@@ -57,10 +61,17 @@ lib/
 ├── models/       # Modelli dati (atleta, squadra, cronometraggio)
 ├── repositories/ # Accesso al database locale
 ├── screens/      # Schermate dell'app
-├── services/     # Servizi (tema, lingua, impostazioni cronometro)
+├── services/     # Servizi (tema, lingua, cronometro, backup, aggiornamenti)
 ├── l10n/         # File di localizzazione (it/en)
 └── utils/        # Utility varie
 ```
+
+## Build e release
+
+Ogni push su `main` passa da `flutter analyze` e `flutter test` su GitHub Actions.
+Al push di un tag `vX.Y.Z` viene compilato un APK di release firmato e allegato a una
+GitHub Release in bozza, pronta da rivedere e pubblicare. Vedi
+[.github/workflows](.github/workflows) e [CONTRIBUTING.md](CONTRIBUTING.md#pubblicare-una-release).
 
 ## Changelog
 

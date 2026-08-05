@@ -1475,6 +1475,215 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Display only: times are always saved to the hundredth.'**
   String get timePrecisionDescription;
+
+  /// No description provided for @backupSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup and restore'**
+  String get backupSection;
+
+  /// No description provided for @exportBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Export backup'**
+  String get exportBackup;
+
+  /// No description provided for @exportBackupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Save teams, athletes and times to a JSON file, in the folder you choose.'**
+  String get exportBackupDescription;
+
+  /// No description provided for @importBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from backup'**
+  String get importBackup;
+
+  /// No description provided for @importBackupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaces all current data with the contents of the file you pick.'**
+  String get importBackupDescription;
+
+  /// No description provided for @backupCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation cancelled.'**
+  String get backupCancelled;
+
+  /// No description provided for @backupExportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved — teams: {teams}, athletes: {athletes}, times: {chronos}.'**
+  String backupExportSuccess(int teams, int athletes, int chronos);
+
+  /// No description provided for @backupExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup failed.'**
+  String get backupExportFailed;
+
+  /// No description provided for @restoreConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace all data?'**
+  String get restoreConfirmTitle;
+
+  /// No description provided for @restoreConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The file contains — teams: {teams}, athletes: {athletes}, times: {chronos}.\n\nEverything currently on this device will be deleted and replaced. This cannot be undone.'**
+  String restoreConfirmBody(int teams, int athletes, int chronos);
+
+  /// No description provided for @restoreConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get restoreConfirmAction;
+
+  /// No description provided for @restoreSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore complete — teams: {teams}, athletes: {athletes}, times: {chronos}.'**
+  String restoreSuccess(int teams, int athletes, int chronos);
+
+  /// No description provided for @restoreSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Orphaned records skipped: {count}.'**
+  String restoreSkipped(int count);
+
+  /// No description provided for @restoreFailedInvalidFile.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is not a SplashUp backup.'**
+  String get restoreFailedInvalidFile;
+
+  /// No description provided for @restoreFailedNewerVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup was created by a newer version of SplashUp. Update the app and try again.'**
+  String get restoreFailedNewerVersion;
+
+  /// No description provided for @restoreFailedCorrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup file is damaged or incomplete.'**
+  String get restoreFailedCorrupted;
+
+  /// No description provided for @restoreFailedGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore failed. Your existing data has not been changed.'**
+  String get restoreFailedGeneric;
+
+  /// No description provided for @checkForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get checkForUpdates;
+
+  /// No description provided for @checkForUpdatesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask GitHub whether a newer version has been released.'**
+  String get checkForUpdatesDescription;
+
+  /// No description provided for @autoCheckUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check on startup'**
+  String get autoCheckUpdates;
+
+  /// No description provided for @autoCheckUpdatesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Once a day at most. This is the only internet connection SplashUp makes: it reads the public release on GitHub and sends no data.'**
+  String get autoCheckUpdatesDescription;
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SplashUp {version} is available'**
+  String updateAvailableTitle(String version);
+
+  /// No description provided for @updateReleaseNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'What’s new'**
+  String get updateReleaseNotes;
+
+  /// No description provided for @updateWhereToDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download the update from GitHub and install it the same way you installed the app.'**
+  String get updateWhereToDownload;
+
+  /// No description provided for @updateDownloadApk.
+  ///
+  /// In en, this message translates to:
+  /// **'Download APK'**
+  String get updateDownloadApk;
+
+  /// No description provided for @updateOpenPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open on GitHub'**
+  String get updateOpenPage;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updateLater;
+
+  /// No description provided for @updateUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have the latest version ({version}).'**
+  String updateUpToDate(String version);
+
+  /// No description provided for @updateErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach GitHub. Check your connection and try again.'**
+  String get updateErrorNetwork;
+
+  /// No description provided for @updateErrorRateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests to GitHub in a short time. Try again later.'**
+  String get updateErrorRateLimit;
+
+  /// No description provided for @updateErrorNoRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'No release has been published on GitHub yet.'**
+  String get updateErrorNoRelease;
+
+  /// No description provided for @updateErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Update check failed.'**
+  String get updateErrorGeneric;
+
+  /// No description provided for @updateOpenLinkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link. Go to github.com/mattileap/splashup/releases.'**
+  String get updateOpenLinkFailed;
+
+  /// No description provided for @restoreConfirmBodyWithDropped.
+  ///
+  /// In en, this message translates to:
+  /// **'The file contains — teams: {teams}, athletes: {athletes}, times: {chronos}.\n\nCareful: {dropped} records in the file are orphaned (athletes with no team, or times with no athlete) and will NOT be restored.\n\nEverything currently on this device will be deleted and replaced. This cannot be undone.'**
+  String restoreConfirmBodyWithDropped(
+    int teams,
+    int athletes,
+    int chronos,
+    int dropped,
+  );
 }
 
 class _AppLocalizationsDelegate

@@ -313,5 +313,115 @@
   "info": "Info",
   "appVersion": "Versione",
   "openSourceLicenses": "Licenze open source",
-  "timePrecisionDescription": "Solo visualizzazione: il salvataggio resta al centesimo."
+  "timePrecisionDescription": "Solo visualizzazione: il salvataggio resta al centesimo.",
+  "backupSection": "Backup e ripristino",
+  "exportBackup": "Esporta backup",
+  "exportBackupDescription": "Salva squadre, atleti e tempi in un file JSON, nella cartella che scegli tu.",
+  "importBackup": "Ripristina da backup",
+  "importBackupDescription": "Sostituisce tutti i dati attuali con quelli del file che scegli.",
+  "backupCancelled": "Operazione annullata.",
+  "backupExportSuccess": "Backup salvato — squadre: {teams}, atleti: {athletes}, tempi: {chronos}.",
+  "@backupExportSuccess": {
+    "placeholders": {
+      "teams": {
+        "type": "int"
+      },
+      "athletes": {
+        "type": "int"
+      },
+      "chronos": {
+        "type": "int"
+      }
+    }
+  },
+  "backupExportFailed": "Backup non riuscito.",
+  "restoreConfirmTitle": "Sostituire tutti i dati?",
+  "restoreConfirmBody": "Il file contiene — squadre: {teams}, atleti: {athletes}, tempi: {chronos}.\n\nTutto quello che c’è ora su questo dispositivo verrà eliminato e sostituito. L’operazione non si può annullare.",
+  "@restoreConfirmBody": {
+    "placeholders": {
+      "teams": {
+        "type": "int"
+      },
+      "athletes": {
+        "type": "int"
+      },
+      "chronos": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreConfirmAction": "Sostituisci",
+  "restoreSuccess": "Ripristino completato — squadre: {teams}, atleti: {athletes}, tempi: {chronos}.",
+  "@restoreSuccess": {
+    "placeholders": {
+      "teams": {
+        "type": "int"
+      },
+      "athletes": {
+        "type": "int"
+      },
+      "chronos": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreSkipped": "Record scollegati ignorati: {count}.",
+  "@restoreSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreFailedInvalidFile": "Questo file non è un backup di SplashUp.",
+  "restoreFailedNewerVersion": "Questo backup è stato creato con una versione più recente di SplashUp. Aggiorna l’app e riprova.",
+  "restoreFailedCorrupted": "Il file di backup è danneggiato o incompleto.",
+  "restoreFailedGeneric": "Ripristino non riuscito. I dati che avevi non sono stati modificati.",
+  "checkForUpdates": "Verifica aggiornamenti",
+  "checkForUpdatesDescription": "Controlla su GitHub se è uscita una versione più recente.",
+  "autoCheckUpdates": "Controlla all’avvio",
+  "autoCheckUpdatesDescription": "Al massimo una volta al giorno. È l’unica connessione a internet che SplashUp usa: legge la release pubblica su GitHub e non invia nessun dato.",
+  "updateAvailableTitle": "SplashUp {version} è disponibile",
+  "@updateAvailableTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateReleaseNotes": "Novità",
+  "updateWhereToDownload": "Scarica l’aggiornamento da GitHub e installalo come hai fatto la prima volta.",
+  "updateDownloadApk": "Scarica APK",
+  "updateOpenPage": "Apri su GitHub",
+  "updateLater": "Più tardi",
+  "updateUpToDate": "Hai già l’ultima versione ({version}).",
+  "@updateUpToDate": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateErrorNetwork": "Non riesco a contattare GitHub. Controlla la connessione e riprova.",
+  "updateErrorRateLimit": "Troppe richieste a GitHub in poco tempo. Riprova più tardi.",
+  "updateErrorNoRelease": "Su GitHub non è ancora stata pubblicata nessuna release.",
+  "updateErrorGeneric": "Controllo aggiornamenti non riuscito.",
+  "updateOpenLinkFailed": "Non riesco ad aprire il link. Vai su github.com/mattileap/splashup/releases.",
+  "restoreConfirmBodyWithDropped": "Il file contiene — squadre: {teams}, atleti: {athletes}, tempi: {chronos}.\n\nAttenzione: {dropped} record del file sono scollegati (atleti senza squadra, o tempi senza atleta) e NON verranno ripristinati.\n\nTutto quello che c’è ora su questo dispositivo verrà eliminato e sostituito. L’operazione non si può annullare.",
+  "@restoreConfirmBodyWithDropped": {
+    "placeholders": {
+      "teams": {
+        "type": "int"
+      },
+      "athletes": {
+        "type": "int"
+      },
+      "chronos": {
+        "type": "int"
+      },
+      "dropped": {
+        "type": "int"
+      }
+    }
+  }
 }

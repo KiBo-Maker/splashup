@@ -3,15 +3,6 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
-    // START: FlutterFire Configuration
-    // DISATTIVATO insieme a Firebase: google-services.json è registrato per
-    // il vecchio package (com.example.splashup) e faceva fallire il build
-    // dopo il rename. Quando Firebase verrà riattivato: registrare la nuova
-    // app "com.splashup.splashup" nella console Firebase, scaricare il nuovo
-    // google-services.json e riabilitare questa riga (e quella in
-    // settings.gradle.kts).
-    // id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
     // RIMOSSO id("kotlin-android"): con AGP 9 il Kotlin è integrato
     // (Built-in Kotlin) — vedi guida Flutter "migrate-to-built-in-kotlin".
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.

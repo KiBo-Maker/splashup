@@ -7,6 +7,7 @@ import 'settings_screen.dart';
 
 // NUOVO IMPORT
 import '../repositories/database_repository.dart';
+import '../services/update/update_flow.dart';
 
 class TeamsScreen extends StatefulWidget {
   const TeamsScreen({super.key});
@@ -24,6 +25,17 @@ class _TeamsScreenState extends State<TeamsScreen> {
   void initState() {
     super.initState();
     _teamsStream = context.read<DatabaseRepository>().getTeamsStream();
+
+    // Check aggiornamenti all'avvio, agganciato qui e non alla schermata di
+    // benvenuto: questa e' la prima schermata che resta montata, quindi il
+    // dialog non rischia di comparire mentre l'utente sta ancora navigando
+    // via. Il servizio decide da se' se il controllo va fatto (max 1 al
+    // giorno, e solo se l'utente non l'ha disattivato) e in caso di errore
+    // di rete non mostra nulla.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      UpdateFlow.maybeCheckOnStartup(context);
+    });
   }
 
   /// Displays a dialog to edit the name and default pool length of an existing team.
@@ -97,8 +109,6 @@ class _TeamsScreenState extends State<TeamsScreen> {
 
   /// Displays a dialog to add a new team to the user's collection.
   Future<void> _addTeam() async {
-    // NOTA: Non controlliamo più FirebaseAuth.instance.currentUser perché siamo offline!
-    
     final l10n = AppLocalizations.of(context)!;
     final teamNameController = TextEditingController();
     int poolLength = 25; // Default to 25m for new teams.

@@ -1,0 +1,141 @@
+# Compila l'APK di release FIRMATO e lo allega a una GitHub Release in BOZZA.
+#
+# Come si usa:
+#   1. aggiorna `version:` in pubspec.yaml (es. 2.5.0+31) e il CHANGELOG.md
+#   2. git tag v2.5.0 && git push origin v2.5.0
+#   3. questo workflow crea la Release in bozza con l'APK allegato
+#   4. scrivi le note di rilascio su GitHub e premi "Publish release"
+#
+# La bozza e' voluta: `GET /releases/latest` (usato dal check aggiornamenti
+# in-app) ignora le bozze e le prerelease, quindi l'app non annuncia un
+# aggiornamento finche' non pubblichi tu.
+#
+# Secrets richiesti (Settings > Secrets and variables > Actions):
+#   ANDROID_KEYSTORE_BASE64  -> il .jks codificato base64
+#   ANDROID_KEYSTORE_PASSWORD
+#   ANDROID_KEY_PASSWORD
+#   ANDROID_KEY_ALIAS
+# Per generare il primo:
+#   Windows PowerShell:
+#     [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\keystores\splashupkey.jks")) | Set-Clipboard
+#   Linux/macOS:
+#     base64 -w0 splashupkey.jks
+name: Release Android
+
+on:
+  push:
+    tags: ['v*']
+
+env:
+  FLUTTER_VERSION: '3.44.7'
+
+jobs:
+  release:
+    name: Build APK firmato e crea la bozza di release
+    runs-on: ubuntu-latest
+    permissions:
+      # Necessario per creare la release e allegare l'APK.
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: true
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Il tag corrisponde alla versione in pubspec.yaml?
+        # Se il tag e la versione divergono, l'APK pubblicato dichiara una
+        # versione diversa da quella della release e il check aggiornamenti
+        # in-app confronterebbe numeri sbagliati (loop di "aggiornamento
+        # disponibile" che non si risolve mai).
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PUBSPEC_VERSION="$(grep -m1 '^version:' pubspec.yaml | sed 's/version:[[:space:]]*//' | cut -d'+' -f1)"
+          echo "tag=$TAG_VERSION pubspec=$PUBSPEC_VERSION"
+          if [ "$TAG_VERSION" != "$PUBSPEC_VERSION" ]; then
+            echo "::error::Il tag ($TAG_VERSION) non corrisponde alla versione in pubspec.yaml ($PUBSPEC_VERSION)."
+            exit 1
+          fi
+
+      - name: Dipendenze
+        run: flutter pub get
+
+      - name: Analisi statica
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Ricostruisci il keystore dai secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::Secret ANDROID_KEYSTORE_BASE64 mancante: senza keystore l'APK verrebbe firmato con la chiave di debug. Vedi i commenti in cima a questo workflow."
+            exit 1
+          fi
+          KEYSTORE_PATH="$RUNNER_TEMP/splashup-release.jks"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH"
+          # android/app/build.gradle.kts legge android/key.properties.
+          {
+            echo "storePassword=$KEYSTORE_PASSWORD"
+            echo "keyPassword=$KEY_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "storeFile=$KEYSTORE_PATH"
+          } > android/key.properties
+          echo "keystore pronto ($(stat -c%s "$KEYSTORE_PATH") byte)"
+
+      - name: Build APK di release
+        run: flutter build apk --release
+
+      - name: Trova l'APK e verifica la firma
+        id: apk
+        # Il nome file e' personalizzato in android/app/build.gradle.kts
+        # (splashup-vX.Y.Z.apk), quindi lo cerchiamo invece di indovinarlo.
+        run: |
+          APK_PATH="$(find build/app/outputs -name '*.apk' -type f | head -n1)"
+          if [ -z "$APK_PATH" ]; then
+            echo "::error::Nessun APK trovato sotto build/app/outputs."
+            exit 1
+          fi
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+          echo "APK: $APK_PATH ($(du -h "$APK_PATH" | cut -f1))"
+          # Stampa il certificato: controlla che il fingerprint SHA-256 sia
+          # quello del tuo keystore e non quello di debug.
+          BUILD_TOOLS="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n1)"
+          "$BUILD_TOOLS/apksigner" verify --print-certs "$APK_PATH"
+
+      - name: Rimuovi le credenziali dal workspace
+        if: always()
+        run: rm -f android/key.properties "$RUNNER_TEMP/splashup-release.jks"
+
+      - name: Crea la bozza di release con l'APK allegato
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APK_PATH: ${{ steps.apk.outputs.apk_path }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "$APK_PATH" \
+            --draft \
+            --title "SplashUp $GITHUB_REF_NAME" \
+            --notes "Bozza generata automaticamente. Scrivi qui le note di rilascio (vedi CHANGELOG.md) e pubblica."
+          echo "Bozza creata. Completala qui: ${{ github.server_url }}/${{ github.repository }}/releases"

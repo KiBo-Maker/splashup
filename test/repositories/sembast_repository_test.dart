@@ -7,6 +7,7 @@ import 'package:splashup/models/athlete_model.dart';
 import 'package:splashup/models/chrono_model.dart';
 import 'package:splashup/models/team_model.dart';
 import 'package:splashup/repositories/sembast_repository.dart';
+import 'package:splashup/services/backup/backup_payload.dart';
 
 // Helpers to build valid model instances. The id is ignored on insert
 // (the repository generates its own UUID keys).
@@ -170,5 +171,94 @@ void main() {
     final chronos2 = await repo.getChronosStream(athlete2Id).first;
     expect(chronos2.length, 1);
     expect(chronos2.first.finalTimeMs, 65000);
+  });
+
+  // --- BACKUP / RIPRISTINO ---
+
+  test('exportAll restituisce i record grezzi, campi di legame compresi',
+      () async {
+    final teamId = await repo.addTeam(buildTeam('Team'));
+    final athleteId = await repo.addAthlete(teamId, buildAthlete('Anna'));
+    await repo.addChrono(teamId, athleteId, buildChrono());
+
+    final payload = await repo.exportAll();
+
+    expect(payload.teamCount, 1);
+    expect(payload.athleteCount, 1);
+    expect(payload.chronoCount, 1);
+    // Sono proprio questi i campi che si perderebbero passando dai modelli.
+    expect(payload.athletes[athleteId]!['teamId'], teamId);
+    expect(payload.athletes[athleteId]!['createdAt'], isA<int>());
+    expect(payload.chronos.values.first['athleteId'], athleteId);
+    expect(payload.chronos.values.first['teamId'], teamId);
+  });
+
+  test('export + replaceAll ricostruisce lo stesso database, id compresi',
+      () async {
+    final teamId = await repo.addTeam(buildTeam('Team'));
+    final athleteId = await repo.addAthlete(teamId, buildAthlete('Anna'));
+    await repo.addChrono(teamId, athleteId, buildChrono());
+    final backup = await repo.exportAll();
+
+    // L'utente cancella tutto e poi ripristina.
+    await repo.deleteAllData();
+    expect(await repo.getTeamsStream().first, isEmpty);
+
+    await repo.replaceAll(backup);
+
+    final teams = await repo.getTeamsStream().first;
+    expect(teams.length, 1);
+    // Gli id vengono conservati: i tempi restano appesi allo stesso atleta.
+    expect(teams.first.id, teamId);
+    final athletes = await repo.getAthletesStream(teamId).first;
+    expect(athletes.length, 1);
+    expect(athletes.first.id, athleteId);
+    expect(athletes.first.name, 'Anna');
+    final chronos = await repo.getChronosStream(athleteId).first;
+    expect(chronos.length, 1);
+    expect(chronos.first.finalTimeMs, 65000);
+  });
+
+  test('replaceAll sostituisce, non unisce', () async {
+    final oldTeamId = await repo.addTeam(buildTeam('Vecchia'));
+    await repo.addAthlete(oldTeamId, buildAthlete('Da cancellare'));
+    final backup = await repo.exportAll();
+
+    // Situazione diversa da quella del backup.
+    await repo.deleteAllData();
+    final otherTeamId = await repo.addTeam(buildTeam('Attuale'));
+    await repo.addAthlete(otherTeamId, buildAthlete('Bruno'));
+
+    await repo.replaceAll(backup);
+
+    final teams = await repo.getTeamsStream().first;
+    expect(teams.length, 1, reason: 'la squadra attuale deve sparire');
+    expect(teams.first.name, 'Vecchia');
+    expect(await repo.getAthletesStream(otherTeamId).first, isEmpty);
+  });
+
+  test('replaceAll con un backup vuoto svuota il database', () async {
+    final teamId = await repo.addTeam(buildTeam('Team'));
+    await repo.addAthlete(teamId, buildAthlete('Anna'));
+
+    await repo.replaceAll(const BackupPayload.empty());
+
+    expect(await repo.getTeamsStream().first, isEmpty);
+    expect(await repo.getAthletesStream(teamId).first, isEmpty);
+  });
+
+  test('deleteAllData rimuove anche i record scollegati', () async {
+    final teamId = await repo.addTeam(buildTeam('Team'));
+    final athleteId = await repo.addAthlete(teamId, buildAthlete('Anna'));
+    await repo.addChrono(teamId, athleteId, buildChrono());
+    // Atleta appeso a una squadra che non esiste: la vecchia cancellazione
+    // squadra-per-squadra non lo avrebbe mai raggiunto.
+    await repo.addAthlete('squadra-fantasma', buildAthlete('Orfano'));
+
+    await repo.deleteAllData();
+
+    expect(await repo.getTeamsStream().first, isEmpty);
+    expect(await athletesStore.find(db), isEmpty);
+    expect(await chronosStore.find(db), isEmpty);
   });
 }

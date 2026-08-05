@@ -1,0 +1,17 @@
+# Template per android/key.properties (che NON va versionato: vedi
+# android/.gitignore). Serve solo per compilare un APK di release firmato in
+# locale; la CI ricostruisce questo stesso file dai secrets di GitHub, vedi
+# .github/workflows/release.yml.
+#
+# Come creare un keystore, se non ne hai gia' uno:
+#   keytool -genkey -v -keystore splashupkey.jks -keyalg RSA -keysize 2048 \
+#           -validity 10000 -alias upload
+#
+# ATTENZIONE: se perdi il keystore non puoi piu' pubblicare aggiornamenti
+# firmati con la stessa chiave. Tienine una copia di backup fuori dal repo.
+
+storePassword=la-password-del-keystore
+keyPassword=la-password-della-chiave
+keyAlias=upload
+# Percorso del file .jks. Su Windows va scritto con i backslash raddoppiati.
+storeFile=C:\\percorso\\al\\tuo\\splashupkey.jks

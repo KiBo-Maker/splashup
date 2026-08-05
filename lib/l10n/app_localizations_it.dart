@@ -756,4 +756,138 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get timePrecisionDescription =>
       'Solo visualizzazione: il salvataggio resta al centesimo.';
+
+  @override
+  String get backupSection => 'Backup e ripristino';
+
+  @override
+  String get exportBackup => 'Esporta backup';
+
+  @override
+  String get exportBackupDescription =>
+      'Salva squadre, atleti e tempi in un file JSON, nella cartella che scegli tu.';
+
+  @override
+  String get importBackup => 'Ripristina da backup';
+
+  @override
+  String get importBackupDescription =>
+      'Sostituisce tutti i dati attuali con quelli del file che scegli.';
+
+  @override
+  String get backupCancelled => 'Operazione annullata.';
+
+  @override
+  String backupExportSuccess(int teams, int athletes, int chronos) {
+    return 'Backup salvato — squadre: $teams, atleti: $athletes, tempi: $chronos.';
+  }
+
+  @override
+  String get backupExportFailed => 'Backup non riuscito.';
+
+  @override
+  String get restoreConfirmTitle => 'Sostituire tutti i dati?';
+
+  @override
+  String restoreConfirmBody(int teams, int athletes, int chronos) {
+    return 'Il file contiene — squadre: $teams, atleti: $athletes, tempi: $chronos.\n\nTutto quello che c’è ora su questo dispositivo verrà eliminato e sostituito. L’operazione non si può annullare.';
+  }
+
+  @override
+  String get restoreConfirmAction => 'Sostituisci';
+
+  @override
+  String restoreSuccess(int teams, int athletes, int chronos) {
+    return 'Ripristino completato — squadre: $teams, atleti: $athletes, tempi: $chronos.';
+  }
+
+  @override
+  String restoreSkipped(int count) {
+    return 'Record scollegati ignorati: $count.';
+  }
+
+  @override
+  String get restoreFailedInvalidFile =>
+      'Questo file non è un backup di SplashUp.';
+
+  @override
+  String get restoreFailedNewerVersion =>
+      'Questo backup è stato creato con una versione più recente di SplashUp. Aggiorna l’app e riprova.';
+
+  @override
+  String get restoreFailedCorrupted =>
+      'Il file di backup è danneggiato o incompleto.';
+
+  @override
+  String get restoreFailedGeneric =>
+      'Ripristino non riuscito. I dati che avevi non sono stati modificati.';
+
+  @override
+  String get checkForUpdates => 'Verifica aggiornamenti';
+
+  @override
+  String get checkForUpdatesDescription =>
+      'Controlla su GitHub se è uscita una versione più recente.';
+
+  @override
+  String get autoCheckUpdates => 'Controlla all’avvio';
+
+  @override
+  String get autoCheckUpdatesDescription =>
+      'Al massimo una volta al giorno. È l’unica connessione a internet che SplashUp usa: legge la release pubblica su GitHub e non invia nessun dato.';
+
+  @override
+  String updateAvailableTitle(String version) {
+    return 'SplashUp $version è disponibile';
+  }
+
+  @override
+  String get updateReleaseNotes => 'Novità';
+
+  @override
+  String get updateWhereToDownload =>
+      'Scarica l’aggiornamento da GitHub e installalo come hai fatto la prima volta.';
+
+  @override
+  String get updateDownloadApk => 'Scarica APK';
+
+  @override
+  String get updateOpenPage => 'Apri su GitHub';
+
+  @override
+  String get updateLater => 'Più tardi';
+
+  @override
+  String updateUpToDate(String version) {
+    return 'Hai già l’ultima versione ($version).';
+  }
+
+  @override
+  String get updateErrorNetwork =>
+      'Non riesco a contattare GitHub. Controlla la connessione e riprova.';
+
+  @override
+  String get updateErrorRateLimit =>
+      'Troppe richieste a GitHub in poco tempo. Riprova più tardi.';
+
+  @override
+  String get updateErrorNoRelease =>
+      'Su GitHub non è ancora stata pubblicata nessuna release.';
+
+  @override
+  String get updateErrorGeneric => 'Controllo aggiornamenti non riuscito.';
+
+  @override
+  String get updateOpenLinkFailed =>
+      'Non riesco ad aprire il link. Vai su github.com/mattileap/splashup/releases.';
+
+  @override
+  String restoreConfirmBodyWithDropped(
+    int teams,
+    int athletes,
+    int chronos,
+    int dropped,
+  ) {
+    return 'Il file contiene — squadre: $teams, atleti: $athletes, tempi: $chronos.\n\nAttenzione: $dropped record del file sono scollegati (atleti senza squadra, o tempi senza atleta) e NON verranno ripristinati.\n\nTutto quello che c’è ora su questo dispositivo verrà eliminato e sostituito. L’operazione non si può annullare.';
+  }
 }

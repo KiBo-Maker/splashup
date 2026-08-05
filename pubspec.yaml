@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.4.2+30
+version: 2.5.0+31
 
 environment:
   sdk: ^3.7.0
@@ -33,10 +33,6 @@ dependencies:
   flutter_localizations: #Adding languages support
     sdk: flutter         #Adding languages support
   intl: ^0.20.2          #Adding languages support
-  #firebase_core: ^4.2.0   # Adding Firebase support
-  #cloud_firestore: ^6.0.3 # Adding Firebase support
-  #firebase_auth: ^6.1.1   # Adding Google Authentication
-  #google_sign_in: ^7.2.0  # Adding Google Authentication
   collection: ^1.19.1 # Add this for deep equality checks
   provider: ^6.1.5+1 # Add this for state management
   shared_preferences: ^2.5.5 # Add this to save user preferences
@@ -48,6 +44,12 @@ dependencies:
   package_info_plus: ^10.1.0 # App version info for the Info section
   wakelock_plus: ^1.6.1 # Keep screen on while using the stopwatch
   audioplayers: ^6.8.1 # Stopwatch sound feedback (bundled click sound)
+  http: ^1.6.0 # Chiamata alle GitHub Releases API per il check aggiornamenti
+  url_launcher: ^6.3.2 # Apre la pagina/APK della release su GitHub
+  # Backup/ripristino: due plugin invece di file_picker, che dipende da
+  # win32 ^5 e non puo' convivere con wakelock_plus (win32 ^6).
+  file_selector: ^1.1.0 # Apertura file su tutte le piattaforme (plugin ufficiale Flutter)
+  flutter_file_dialog: ^3.3.0 # Dialog "salva con nome" su Android/iOS via SAF
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

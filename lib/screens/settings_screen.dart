@@ -4,11 +4,13 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/team_model.dart';
 import '../repositories/database_repository.dart';
+import '../services/backup/backup_file_service.dart';
+import '../services/backup/backup_service.dart';
 import '../services/stopwatch_settings_service.dart';
+import '../services/update/update_flow.dart';
+import '../services/update/update_settings_service.dart';
 import 'customize_experience_screen.dart';
 import 'move_athletes_screen.dart';
-// SYNC: NUOVO IMPORT per il Sync
-// import '../services/cloud/cloud_sync_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -27,8 +29,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // dopo aver aggiunto o eliminato squadre.
   late final Stream<List<Team>> _teamsStream;
 
-  // SYNC: Stato per gestire il caricamento del backup
-  // bool _isSyncing = false;
+  /// Backup ed esportazione toccano tutto il database: mentre sono in corso,
+  /// tutte le altre azioni distruttive della schermata restano disabilitate.
+  /// Sembast serializza le transazioni, quindi niente si corrompe, ma l'ordine
+  /// non sarebbe garantito: un "elimina dati" partito durante un ripristino
+  /// potrebbe atterrare dopo e cancellare quello che si è appena ripristinato.
+  bool _backupBusy = false;
+  bool _updateBusy = false;
+
+  /// Creata una sola volta: costruirla dentro build() significa passare una
+  /// Future nuova a ogni rebuild, e il FutureBuilder tornerebbe a mostrare
+  /// "…" al posto della versione ogni volta che si tocca un'altra impostazione.
+  late final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
 
   @override
   void initState() {
@@ -36,35 +48,160 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _teamsStream = context.read<DatabaseRepository>().getTeamsStream();
   }
 
- /*
-  // --- SYNC LOGIC ---
-  Future<void> _handleCloudBackup() async {
-    setState(() => _isSyncing = true);
-    final messenger = ScaffoldMessenger.of(context);
-    // Recuperiamo il DB locale dal provider
-    final db = context.read<DatabaseRepository>();
-    // Creiamo il servizio di sync al volo
-    final syncService = CloudSyncService(db);
+  // --- BACKUP / RIPRISTINO ---
 
+  Future<void> _handleExportBackup() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final service = BackupFileService(context.read<DatabaseRepository>());
+
+    setState(() => _backupBusy = true);
     try {
-      await syncService.backupToCloud(context);
-      if (mounted) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Backup su Google Drive completato! (Cloud Firestore)')),
-        );
-      }
+      final info = await _packageInfo;
+      final result = await service.export(
+        appVersion: info.version,
+        appBuild: info.buildNumber,
+        dialogTitle: l10n.exportBackup,
+      );
+      if (!mounted) return;
+
+      final message = switch (result.status) {
+        BackupActionStatus.success => l10n.backupExportSuccess(
+            result.teams,
+            result.athletes,
+            result.chronos,
+          ),
+        BackupActionStatus.cancelled => l10n.backupCancelled,
+        BackupActionStatus.failed => l10n.backupExportFailed,
+      };
+      messenger.showSnackBar(SnackBar(content: Text(message)));
     } catch (e) {
+      debugPrint('Backup export failed: $e');
       if (mounted) {
-        messenger.showSnackBar(
-          SnackBar(content: Text('Errore Backup: $e')),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(l10n.backupExportFailed)));
       }
     } finally {
-      if (mounted) setState(() => _isSyncing = false);
+      if (mounted) setState(() => _backupBusy = false);
     }
   }
-  // ---------END SYNC LOGIC---------
-*/
+
+  Future<void> _handleImportBackup() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final service = BackupFileService(context.read<DatabaseRepository>());
+
+    setState(() => _backupBusy = true);
+    try {
+      // Prima si legge e valida il file, poi si chiede conferma, e solo dopo
+      // si tocca il database: se il file scelto è sbagliato, i dati attuali
+      // non sono ancora stati cancellati.
+      final pending = await service.pickAndRead(dialogTitle: l10n.importBackup);
+      if (!mounted) return;
+
+      if (pending == null) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.backupCancelled)));
+        return;
+      }
+
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.restoreConfirmTitle),
+          // I numeri mostrati sono quelli del FILE, non quelli che
+          // sopravvivono alla potatura: se il file ha record scollegati,
+          // l'utente deve saperlo PRIMA di confermare, non scoprirlo dopo che
+          // i suoi dati sono stati cancellati.
+          content: Text(
+            pending.hasDropped
+                ? l10n.restoreConfirmBodyWithDropped(
+                    pending.fileTeams,
+                    pending.fileAthletes,
+                    pending.fileChronos,
+                    pending.droppedTotal,
+                  )
+                : l10n.restoreConfirmBody(
+                    pending.fileTeams,
+                    pending.fileAthletes,
+                    pending.fileChronos,
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.cancel),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.withAlpha(200),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.restoreConfirmAction),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true || !mounted) return;
+
+      final result = await service.applyRestore(pending);
+      if (!mounted) return;
+
+      final done = l10n.restoreSuccess(
+        result.teams,
+        result.athletes,
+        result.chronos,
+      );
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            result.droppedTotal > 0
+                ? '$done ${l10n.restoreSkipped(result.droppedTotal)}'
+                : done,
+          ),
+        ),
+      );
+    } on BackupException catch (e) {
+      debugPrint('Backup restore rejected: $e');
+      if (!mounted) return;
+      final message = switch (e.kind) {
+        BackupErrorKind.notASplashUpBackup => l10n.restoreFailedInvalidFile,
+        BackupErrorKind.unsupportedSchemaVersion =>
+          l10n.restoreFailedNewerVersion,
+        BackupErrorKind.corrupted => l10n.restoreFailedCorrupted,
+      };
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+    } catch (e) {
+      debugPrint('Backup restore failed: $e');
+      if (mounted) {
+        messenger
+            .showSnackBar(SnackBar(content: Text(l10n.restoreFailedGeneric)));
+      }
+    } finally {
+      if (mounted) setState(() => _backupBusy = false);
+    }
+  }
+
+  // --- AGGIORNAMENTI ---
+
+  Future<void> _handleCheckUpdates() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+
+    setState(() => _updateBusy = true);
+    try {
+      await UpdateFlow.checkManually(context);
+    } catch (e) {
+      // UpdateFlow gestisce già i suoi errori, ma senza questo catch un
+      // imprevisto qui spegnerebbe lo spinner senza dire niente all'utente.
+      debugPrint('Update check failed: $e');
+      if (mounted) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.updateErrorGeneric)));
+      }
+    } finally {
+      if (mounted) setState(() => _updateBusy = false);
+    }
+  }
 
   Future<void> _runDeactivation() async {
     final l10n = AppLocalizations.of(context)!;
@@ -319,12 +456,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               final navigator = Navigator.of(context);
                               final messenger = ScaffoldMessenger.of(context);
                               try {
-                                // Eliminazione manuale di tutte le squadre (cascading su tutto il resto)
-                                final teams = await db.getTeamsStream().first;
-                                for(var team in teams) {
-                                  await db.deleteTeam(team.id);
-                                }
-                                
+                                // Svuotamento atomico dei tre store. Prima si
+                                // cancellava squadra per squadra: un eventuale
+                                // record scollegato (atleta con una squadra che
+                                // non esiste più) sopravviveva al "reset dati"
+                                // restando invisibile nella UI.
+                                await db.deleteAllData();
+
                                 if (!mounted) return;
                                 navigator.popUntil((route) => route.isFirst);
                                 messenger.showSnackBar(
@@ -448,7 +586,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               return Column(
                 children: [
                   ListTile(
-                    enabled: teamCount >= 2,
+                    enabled: teamCount >= 2 && !_backupBusy,
                     leading: const Icon(Icons.sync_alt),
                     title: Text(l10n.moveAthletes),
                     subtitle: Text(
@@ -456,7 +594,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ? l10n.moveAthletesDeny
                       : l10n.moveAthletesDescription
                     ),
-                    onTap: teamCount >= 2 ? () {
+                    onTap: (teamCount >= 2 && !_backupBusy) ? () {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (context) => const MoveAthletesScreen()),
                       );
@@ -465,15 +603,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   // ADDED: New ListTile for deleting a team.
                   ListTile(
-                    enabled: teamCount > 0,
+                    enabled: teamCount > 0 && !_backupBusy,
                     leading: const Icon(Icons.group_remove_outlined),
                     title: Text(l10n.deleteTeam),
                     subtitle: Text(l10n.deleteTeamDescription),
-                    onTap: teamCount > 0 ? _showDeleteTeamDialog : null,
+                    onTap: (teamCount > 0 && !_backupBusy)
+                        ? _showDeleteTeamDialog
+                        : null,
                   ),
                 ],
               );
             },
+          ),
+
+          const Divider(),
+          // --- SEZIONE BACKUP / RIPRISTINO ---
+          ListTile(
+            title: Text(l10n.backupSection,
+                style: Theme.of(context).textTheme.titleSmall),
+          ),
+          ListTile(
+            enabled: !_backupBusy,
+            leading: _backupBusy
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.save_alt_outlined),
+            title: Text(l10n.exportBackup),
+            subtitle: Text(l10n.exportBackupDescription),
+            onTap: _backupBusy ? null : _handleExportBackup,
+          ),
+          ListTile(
+            enabled: !_backupBusy,
+            leading: const Icon(Icons.restore_page_outlined),
+            title: Text(l10n.importBackup),
+            subtitle: Text(l10n.importBackupDescription),
+            onTap: _backupBusy ? null : _handleImportBackup,
           ),
 
           const Divider(),
@@ -508,7 +675,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
                 ElevatedButton(
-                  onPressed: _runDeactivation,
+                  onPressed: _backupBusy ? null : _runDeactivation,
                   child: Text(l10n.run),
                 ),
               ],
@@ -547,7 +714,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     backgroundColor: Colors.red.withAlpha(200),
                     foregroundColor: Colors.white,
                   ),
-                  onPressed: _runDeletion,
+                  onPressed: _backupBusy ? null : _runDeletion,
                   child: Text(l10n.run),
                 ),
               ],
@@ -556,13 +723,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const Divider(),
           ListTile(
+            enabled: !_backupBusy,
             leading: const Icon(Icons.delete_forever, color: Colors.red),
             // Ho cambiato il titolo per riflettere che siamo offline
             title: Text(
               l10n.deleteData, // O usa una stringa l10n se vuoi aggiungerla
               style: const TextStyle(color: Colors.red),
             ),
-            onTap: _showDeleteAllDataDialog,
+            onTap: _backupBusy ? null : _showDeleteAllDataDialog,
           ),
 
           const Divider(),
@@ -572,7 +740,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: Theme.of(context).textTheme.titleSmall),
           ),
           FutureBuilder<PackageInfo>(
-            future: PackageInfo.fromPlatform(),
+            future: _packageInfo,
             builder: (context, snapshot) {
               final info = snapshot.data;
               return ListTile(
@@ -585,11 +753,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           ListTile(
+            enabled: !_updateBusy,
+            leading: _updateBusy
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.system_update_outlined),
+            title: Text(l10n.checkForUpdates),
+            subtitle: Text(l10n.checkForUpdatesDescription),
+            onTap: _updateBusy ? null : _handleCheckUpdates,
+          ),
+          // Il check automatico è l'unica chiamata di rete di tutta l'app:
+          // chi vuole SplashUp a traffico zero deve poterlo spegnere.
+          Consumer<UpdateSettingsService>(
+            builder: (context, updateSettings, child) => SwitchListTile(
+              secondary: const Icon(Icons.update_outlined),
+              title: Text(l10n.autoCheckUpdates),
+              subtitle: Text(l10n.autoCheckUpdatesDescription),
+              value: updateSettings.autoCheckEnabled,
+              onChanged: updateSettings.setAutoCheckEnabled,
+            ),
+          ),
+          ListTile(
             leading: const Icon(Icons.description_outlined),
             title: Text(l10n.openSourceLicenses),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
-              final info = await PackageInfo.fromPlatform();
+              final info = await _packageInfo;
               if (!context.mounted) return;
               showLicensePage(
                 context: context,
@@ -599,26 +791,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
 
- /*
-          // --- SEZIONE TEST SYNC (DA NASCONDERE IN PRODUZIONE) ---
-          if (true) ...[ // Cambia 'true' in 'false' per nascondere
-            const Divider(),
-            const Padding(
-              padding: EdgeInsets.only(left: 16, top: 10, bottom: 5),
-              child: Text("CLOUD DEBUG AREA", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
-            ),
-            ListTile(
-              leading: _isSyncing 
-                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) 
-                  : const Icon(Icons.cloud_upload, color: Colors.blue),
-              title: const Text("Backup su Google"),
-              subtitle: const Text("Carica dati locali su Firebase"),
-              enabled: !_isSyncing,
-              onTap: _handleCloudBackup,
-            ),
-          ],
-          // ---END SEZIONE TEST SYNC (DA NASCONDERE IN PRODUZIONE) ---
-*/
         ],
       ),
     );

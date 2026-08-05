@@ -752,4 +752,137 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get timePrecisionDescription =>
       'Display only: times are always saved to the hundredth.';
+
+  @override
+  String get backupSection => 'Backup and restore';
+
+  @override
+  String get exportBackup => 'Export backup';
+
+  @override
+  String get exportBackupDescription =>
+      'Save teams, athletes and times to a JSON file, in the folder you choose.';
+
+  @override
+  String get importBackup => 'Restore from backup';
+
+  @override
+  String get importBackupDescription =>
+      'Replaces all current data with the contents of the file you pick.';
+
+  @override
+  String get backupCancelled => 'Operation cancelled.';
+
+  @override
+  String backupExportSuccess(int teams, int athletes, int chronos) {
+    return 'Backup saved — teams: $teams, athletes: $athletes, times: $chronos.';
+  }
+
+  @override
+  String get backupExportFailed => 'Backup failed.';
+
+  @override
+  String get restoreConfirmTitle => 'Replace all data?';
+
+  @override
+  String restoreConfirmBody(int teams, int athletes, int chronos) {
+    return 'The file contains — teams: $teams, athletes: $athletes, times: $chronos.\n\nEverything currently on this device will be deleted and replaced. This cannot be undone.';
+  }
+
+  @override
+  String get restoreConfirmAction => 'Replace';
+
+  @override
+  String restoreSuccess(int teams, int athletes, int chronos) {
+    return 'Restore complete — teams: $teams, athletes: $athletes, times: $chronos.';
+  }
+
+  @override
+  String restoreSkipped(int count) {
+    return 'Orphaned records skipped: $count.';
+  }
+
+  @override
+  String get restoreFailedInvalidFile => 'This file is not a SplashUp backup.';
+
+  @override
+  String get restoreFailedNewerVersion =>
+      'This backup was created by a newer version of SplashUp. Update the app and try again.';
+
+  @override
+  String get restoreFailedCorrupted =>
+      'The backup file is damaged or incomplete.';
+
+  @override
+  String get restoreFailedGeneric =>
+      'Restore failed. Your existing data has not been changed.';
+
+  @override
+  String get checkForUpdates => 'Check for updates';
+
+  @override
+  String get checkForUpdatesDescription =>
+      'Ask GitHub whether a newer version has been released.';
+
+  @override
+  String get autoCheckUpdates => 'Check on startup';
+
+  @override
+  String get autoCheckUpdatesDescription =>
+      'Once a day at most. This is the only internet connection SplashUp makes: it reads the public release on GitHub and sends no data.';
+
+  @override
+  String updateAvailableTitle(String version) {
+    return 'SplashUp $version is available';
+  }
+
+  @override
+  String get updateReleaseNotes => 'What’s new';
+
+  @override
+  String get updateWhereToDownload =>
+      'Download the update from GitHub and install it the same way you installed the app.';
+
+  @override
+  String get updateDownloadApk => 'Download APK';
+
+  @override
+  String get updateOpenPage => 'Open on GitHub';
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String updateUpToDate(String version) {
+    return 'You already have the latest version ($version).';
+  }
+
+  @override
+  String get updateErrorNetwork =>
+      'Could not reach GitHub. Check your connection and try again.';
+
+  @override
+  String get updateErrorRateLimit =>
+      'Too many requests to GitHub in a short time. Try again later.';
+
+  @override
+  String get updateErrorNoRelease =>
+      'No release has been published on GitHub yet.';
+
+  @override
+  String get updateErrorGeneric => 'Update check failed.';
+
+  @override
+  String get updateOpenLinkFailed =>
+      'Could not open the link. Go to github.com/mattileap/splashup/releases.';
+
+  @override
+  String restoreConfirmBodyWithDropped(
+    int teams,
+    int athletes,
+    int chronos,
+    int dropped,
+  ) {
+    return 'The file contains — teams: $teams, athletes: $athletes, times: $chronos.\n\nCareful: $dropped records in the file are orphaned (athletes with no team, or times with no athlete) and will NOT be restored.\n\nEverything currently on this device will be deleted and replaced. This cannot be undone.';
+  }
 }

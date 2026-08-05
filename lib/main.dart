@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'l10n/app_localizations.dart';
-import 'screens/login_screen.dart'; // Che ora contiene la WelcomeScreen
+import 'screens/welcome_screen.dart';
 import 'services/locale_service.dart';
 import 'services/stopwatch_settings_service.dart';
 import 'services/theme_service.dart';
+import 'services/update/update_settings_service.dart';
 
 // NUOVI IMPORT PER IL DATABASE
 import 'repositories/database_repository.dart';
@@ -29,6 +30,8 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (context) => LocaleService(prefs)),
         ChangeNotifierProvider(
             create: (context) => StopwatchSettingsService(prefs)),
+        ChangeNotifierProvider(
+            create: (context) => UpdateSettingsService(prefs)),
         // NUOVO: Iniettiamo il Repository del Database in tutta l'app
         Provider<DatabaseRepository>.value(value: databaseRepository),
       ],
