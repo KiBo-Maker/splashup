@@ -1,0 +1,31 @@
+# Normalizzazione line endings.
+# Il repo memorizza SEMPRE LF; ogni editor puo' scrivere quello che vuole in
+# locale, git non lo segnala piu' come modifica. Serve per evitare i diff
+# fantasma da migliaia di righe visti prima della 2.5.0 (CRLF su Windows vs
+# LF nel repo) e per non rompere la CI su runner Linux.
+* text=auto eol=lf
+
+# Script che DEVONO restare CRLF (Windows li esegue solo cosi')
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Script che DEVONO restare LF anche su Windows (wrapper Gradle, hook, CI)
+gradlew   text eol=lf
+*.sh      text eol=lf
+
+# File binari: mai toccati, mai diffati come testo
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.ttf  binary
+*.otf  binary
+*.woff  binary
+*.woff2 binary
+*.wav  binary
+*.mp3  binary
+*.ogg  binary
+*.jks    binary
+*.keystore binary
