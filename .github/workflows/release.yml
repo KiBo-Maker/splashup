@@ -108,22 +108,45 @@ jobs:
       - name: Build APK di release
         run: flutter build apk --release
 
-      - name: Trova l'APK e verifica la firma
+      - name: Individua l'APK, rinominalo e verifica la firma
         id: apk
-        # Il nome file e' personalizzato in android/app/build.gradle.kts
-        # (splashup-vX.Y.Z.apk), quindi lo cerchiamo invece di indovinarlo.
+        # Flutter lascia DUE copie dello stesso APK di release: quella di
+        # Gradle in apk/release/ (col nome personalizzato definito in
+        # android/app/build.gradle.kts) e la copia che fa Flutter in
+        # flutter-apk/app-release.apk.
+        #
+        # Qui prima c'era un `find` su tutta build/app/outputs con `head -n1`:
+        # l'ordine di find non e' deterministico, sul runner pescava la copia
+        # chiamata "app-release.apk" (nome inutile per chi la scarica) e in un
+        # albero di build non pulito avrebbe potuto pescare perfino un APK di
+        # DEBUG. Quindi: guardiamo solo nella cartella di release, pretendiamo
+        # un unico candidato, e il nome finale lo decidiamo dal tag invece di
+        # ereditarlo dalla configurazione Gradle.
         run: |
-          APK_PATH="$(find build/app/outputs -name '*.apk' -type f | head -n1)"
-          if [ -z "$APK_PATH" ]; then
-            echo "::error::Nessun APK trovato sotto build/app/outputs."
+          shopt -s nullglob
+          CANDIDATES=(build/app/outputs/apk/release/*.apk)
+          if [ ${#CANDIDATES[@]} -eq 0 ]; then
+            CANDIDATES=(build/app/outputs/flutter-apk/app-release.apk)
+          fi
+          if [ ${#CANDIDATES[@]} -ne 1 ]; then
+            echo "::error::Atteso un solo APK di release, trovati ${#CANDIDATES[@]}: ${CANDIDATES[*]}"
             exit 1
           fi
-          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
-          echo "APK: $APK_PATH ($(du -h "$APK_PATH" | cut -f1))"
-          # Stampa il certificato: controlla che il fingerprint SHA-256 sia
-          # quello del tuo keystore e non quello di debug.
+          APK_PATH="${CANDIDATES[0]}"
+          if [ ! -f "$APK_PATH" ]; then
+            echo "::error::Nessun APK di release trovato sotto build/app/outputs."
+            exit 1
+          fi
+
+          DIST_PATH="$RUNNER_TEMP/splashup-${GITHUB_REF_NAME}.apk"
+          cp "$APK_PATH" "$DIST_PATH"
+          echo "apk_path=$DIST_PATH" >> "$GITHUB_OUTPUT"
+          echo "APK: $APK_PATH -> $(basename "$DIST_PATH") ($(du -h "$DIST_PATH" | cut -f1))"
+
+          # Stampa il certificato: il fingerprint SHA-256 deve essere quello
+          # del tuo keystore e non quello di debug.
           BUILD_TOOLS="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n1)"
-          "$BUILD_TOOLS/apksigner" verify --print-certs "$APK_PATH"
+          "$BUILD_TOOLS/apksigner" verify --print-certs "$DIST_PATH"
 
       - name: Rimuovi le credenziali dal workspace
         if: always()
