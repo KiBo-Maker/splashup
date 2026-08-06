@@ -1,4 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Serve SOLO al controllo aggiornamenti (lettura della release
+         pubblica su GitHub), che l'utente puo' disattivare dalle
+         impostazioni. Tutti i dati dell'app restano sul dispositivo.
+         Nota: i manifest di debug e profile hanno gia' questo permesso
+         perche' lo aggiunge il template di Flutter per l'hot reload,
+         quindi senza questa riga la rete funziona in sviluppo e non
+         funziona nell'APK di release. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="SplashUp"
         android:name="${applicationName}"

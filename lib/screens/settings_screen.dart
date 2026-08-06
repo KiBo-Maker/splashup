@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -23,11 +25,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _selectedMonths = 12;
   int _selectedYears = 2;
 
-  // Il conteggio squadre ora arriva da uno stream live invece che da una
-  // lettura una tantum in initState: prima i tile "Sposta atleti" ed
-  // "Elimina squadra" restavano abilitati/disabilitati in modo errato
-  // dopo aver aggiunto o eliminato squadre.
-  late final Stream<List<Team>> _teamsStream;
+  // Il conteggio squadre arriva da uno stream live invece che da una lettura
+  // una tantum: i tile "Sposta atleti" ed "Elimina squadra" devono restare
+  // coerenti con le squadre aggiunte o eliminate altrove.
+  //
+  // Ci iscriviamo UNA volta qui e teniamo i dati nello stato, invece di usare
+  // uno StreamBuilder dentro la lista. Il motivo: `getTeamsStream()` e' un
+  // `async*`, quindi produce uno stream a sottoscrizione singola. Dentro una
+  // ListView lo StreamBuilder viene smontato quando esce dall'area di cache e
+  // ricostruito quando si torna a scorrere in su: la seconda iscrizione allo
+  // stesso stream lancia "Bad state: Stream has already been listened to", e
+  // in una build di release l'eccezione diventa un riquadro grigio al posto
+  // di mezza schermata (visibile solo scorrendo giu' e poi su).
+  StreamSubscription<List<Team>>? _teamsSubscription;
+  List<Team> _teams = const <Team>[];
 
   /// Backup ed esportazione toccano tutto il database: mentre sono in corso,
   /// tutte le altre azioni distruttive della schermata restano disabilitate.
@@ -45,7 +56,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _teamsStream = context.read<DatabaseRepository>().getTeamsStream();
+    _teamsSubscription =
+        context.read<DatabaseRepository>().getTeamsStream().listen(
+      (teams) {
+        if (!mounted) return;
+        setState(() => _teams = teams);
+      },
+      onError: (Object error) => debugPrint('Teams stream error: $error'),
+    );
+  }
+
+  @override
+  void dispose() {
+    _teamsSubscription?.cancel();
+    super.dispose();
   }
 
   // --- BACKUP / RIPRISTINO ---
@@ -375,7 +399,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (mounted) {
             // Usa il metodo l10n corretto con parametro
             messenger.showSnackBar(SnackBar(content: Text(l10n.teamDeleted(teamToDelete.name))));
-            // Il conteggio squadre si aggiorna da solo via _teamsStream
+            // Il conteggio squadre si aggiorna da solo: siamo iscritti allo
+            // stream delle squadre in initState.
           }
         } catch (e) {
           debugPrint('Error deleting team: $e');
@@ -496,6 +521,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final stopwatchSettings = Provider.of<StopwatchSettingsService>(context);
+    final teamCount = _teams.length;
 
     return Scaffold(
       appBar: AppBar(
@@ -577,43 +603,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: Text(l10n.dataManagement,
                 style: Theme.of(context).textTheme.titleSmall),
           ),
-          // I due tile dipendono dal numero di squadre: usiamo lo stream
-          // live così restano coerenti con le modifiche fatte altrove.
-          StreamBuilder<List<Team>>(
-            stream: _teamsStream,
-            builder: (context, snapshot) {
-              final teamCount = snapshot.data?.length ?? 0;
-              return Column(
-                children: [
-                  ListTile(
-                    enabled: teamCount >= 2 && !_backupBusy,
-                    leading: const Icon(Icons.sync_alt),
-                    title: Text(l10n.moveAthletes),
-                    subtitle: Text(
-                      teamCount < 2
-                      ? l10n.moveAthletesDeny
-                      : l10n.moveAthletesDescription
-                    ),
-                    onTap: (teamCount >= 2 && !_backupBusy) ? () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => const MoveAthletesScreen()),
-                      );
-                    } : null,
-                  ),
-
-                  // ADDED: New ListTile for deleting a team.
-                  ListTile(
-                    enabled: teamCount > 0 && !_backupBusy,
-                    leading: const Icon(Icons.group_remove_outlined),
-                    title: Text(l10n.deleteTeam),
-                    subtitle: Text(l10n.deleteTeamDescription),
-                    onTap: (teamCount > 0 && !_backupBusy)
-                        ? _showDeleteTeamDialog
-                        : null,
-                  ),
-                ],
-              );
-            },
+          ListTile(
+            enabled: teamCount >= 2 && !_backupBusy,
+            leading: const Icon(Icons.sync_alt),
+            title: Text(l10n.moveAthletes),
+            subtitle: Text(
+              teamCount < 2 ? l10n.moveAthletesDeny : l10n.moveAthletesDescription,
+            ),
+            onTap: (teamCount >= 2 && !_backupBusy)
+                ? () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const MoveAthletesScreen(),
+                      ),
+                    );
+                  }
+                : null,
+          ),
+          ListTile(
+            enabled: teamCount > 0 && !_backupBusy,
+            leading: const Icon(Icons.group_remove_outlined),
+            title: Text(l10n.deleteTeam),
+            subtitle: Text(l10n.deleteTeamDescription),
+            onTap: (teamCount > 0 && !_backupBusy) ? _showDeleteTeamDialog : null,
           ),
 
           const Divider(),
