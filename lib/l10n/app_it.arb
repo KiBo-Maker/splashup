@@ -80,6 +80,7 @@
       }
     }
   },
+  "dangerZone": "Zona Pericolosa",
   "deleteData": "Reset Dati App",
   "deleteAccount": "Elimina Account",
   "deleteDataWarning": "Questa azione è irreversibile. Tutte le tue squadre, atleti e record verranno eliminati permanentemente.",

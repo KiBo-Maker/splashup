@@ -22,6 +22,12 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  // Rosso fisso per tutta la "danger zone" (azioni distruttive), volutamente
+  // NON legato a colorScheme.error: deve restare rosso anche cambiando tema.
+  // shade700 invece del rosso pieno per non risultare troppo acceso in dark
+  // mode, pur restando riconoscibile come "pericoloso" in entrambi i temi.
+  static final Color _dangerColor = Colors.red.shade700;
+
   int _selectedMonths = 12;
   int _selectedYears = 2;
 
@@ -156,7 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.withAlpha(200),
+                backgroundColor: _dangerColor,
                 foregroundColor: Colors.white,
               ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -278,7 +284,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.cancel)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: _dangerColor,
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -374,7 +380,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.cancel)),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: _dangerColor,
                 foregroundColor: Colors.white,
               ),
               onPressed: () {
@@ -471,7 +477,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             if (states.contains(WidgetState.disabled)) {
                               return Colors.grey;
                             }
-                            return Colors.red.withAlpha(200);
+                            return _dangerColor;
                           },
                         ),
                         foregroundColor: const WidgetStatePropertyAll<Color>(Colors.white),
@@ -656,7 +662,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           const Divider(),
-          // ADDED: New Data Cleanup section
+          // --- DANGER ZONE --- (raggruppa pulizia dati + reset, tutte
+          // azioni distruttive: un unico header le segnala come sezione a
+          // rischio, invece di sembrare impostazioni normali).
+          ListTile(
+            leading: Icon(Icons.warning_amber_rounded, color: _dangerColor),
+            title: Text(
+              l10n.dangerZone,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: _dangerColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ),
           ListTile(
             title: Text(l10n.dataCleanup,
                 style: Theme.of(context).textTheme.titleSmall),
@@ -723,7 +741,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.withAlpha(200),
+                    backgroundColor: _dangerColor,
                     foregroundColor: Colors.white,
                   ),
                   onPressed: _backupBusy ? null : _runDeletion,
@@ -733,14 +751,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          const Divider(),
+          const SizedBox(height: 8),
+          // Chiusura della danger zone: sfondo rosso pieno (non legato al
+          // tema) e testo bianco, così il reset totale risalta anche a
+          // scorrimento veloce rispetto alle altre voci della sezione.
           ListTile(
             enabled: !_backupBusy,
-            leading: const Icon(Icons.delete_forever, color: Colors.red),
-            // Ho cambiato il titolo per riflettere che siamo offline
+            tileColor: _dangerColor,
+            leading: const Icon(Icons.delete_forever, color: Colors.white),
             title: Text(
-              l10n.deleteData, // O usa una stringa l10n se vuoi aggiungerla
-              style: const TextStyle(color: Colors.red),
+              l10n.deleteData,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             onTap: _backupBusy ? null : _showDeleteAllDataDialog,
           ),

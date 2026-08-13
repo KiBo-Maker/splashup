@@ -1,8 +1,8 @@
 # Compila l'APK di release FIRMATO e lo allega a una GitHub Release in BOZZA.
 #
 # Come si usa:
-#   1. aggiorna `version:` in pubspec.yaml (es. 2.5.0+31) e il CHANGELOG.md
-#   2. git tag v2.5.0 && git push origin v2.5.0
+#   1. aggiorna `version:` in pubspec.yaml (es. 2.5.1+32) e il CHANGELOG.md
+#   2. git tag v2.5.1 && git push origin v2.5.1
 #   3. questo workflow crea la Release in bozza con l'APK allegato
 #   4. scrivi le note di rilascio su GitHub e premi "Publish release"
 #
@@ -27,7 +27,7 @@ on:
     tags: ['v*']
 
 env:
-  FLUTTER_VERSION: '3.44.7'
+  FLUTTER_VERSION: '3.44.9'
 
 jobs:
   release:

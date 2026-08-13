@@ -536,6 +536,12 @@ abstract class AppLocalizations {
   /// **'\"{teamName}\" deleted.'**
   String teamDeleted(String teamName);
 
+  /// No description provided for @dangerZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Danger Zone'**
+  String get dangerZone;
+
   /// No description provided for @deleteData.
   ///
   /// In en, this message translates to:

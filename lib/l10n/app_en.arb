@@ -80,6 +80,7 @@
       }
     }
   },
+  "dangerZone": "Danger Zone",
   "deleteData": "Reset App Data",
   "deleteAccount": "Delete Account",
   "deleteDataWarning": "This action is irreversible. All your teams, athletes, and records will be permanently deleted.",

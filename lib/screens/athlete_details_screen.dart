@@ -575,7 +575,9 @@ class _AthleteDetailsScreenState extends State<AthleteDetailsScreen> {
               child: Text(chrono.distance.toString()),
             ),
             title: Text('${styleDisplayNames[chrono.style] ?? chrono.style} - ${chrono.displayTime}'),
-            subtitle: Text('${DateFormat.yMMMd().format(chrono.date)} • ${typeDisplayNames[chrono.type] ?? chrono.type}'),
+            subtitle: Text(
+              '${DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(chrono.date)} • ${typeDisplayNames[chrono.type] ?? chrono.type}',
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
