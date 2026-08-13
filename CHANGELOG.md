@@ -2,6 +2,23 @@
 
 Tutte le modifiche rilevanti di SplashUp. Formato ispirato a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/).
 
+## [2.5.1] - 2026-08-13
+
+Release di manutenzione: correzioni emerse dai test sul campo della 2.5.0 e aggiornamento delle dipendenze.
+
+### Corretto
+- **Data del cronometro sempre in inglese nel picker**, anche con l'app in italiano: `DateFormat.yMMMd()` non passava la locale corrente. Corretto sia nel campo data di "Aggiungi/Modifica cronometro" sia nella riga di ogni cronometro nella scheda atleta.
+- **Tipo cronometro (Allenamento/Gara) con un default silenzioso**: il campo partiva già impostato su "Allenamento", quindi salvare senza toccarlo registrava una gara come allenamento senza che l'allenatore se ne accorgesse. La scelta ora è un `SegmentedButton` (non più un menu a tendina) che parte vuoto alla creazione di un nuovo cronometro ed è obbligatorio prima di salvare; in modifica resta precompilato come prima.
+
+### Modificato
+- **Nuova sezione "Zona pericolosa" in Impostazioni**: pulizia dati e reset totale sono ora raggruppati sotto un header dedicato, con icona di avviso e colore rosso fisso (non legato al tema chiaro/scuro, per restare riconoscibile in entrambi). Il blocco "Reset Dati App" ha ora sfondo rosso pieno e testo bianco invece di essere una voce come le altre.
+
+### Tecnico
+- **`wakelock_plus` aggiornato a 1.7.0** (usato dal cronometro per tenere lo schermo acceso): richiede Flutter >=3.41/Dart >=3.11 e migra il plugin nativo al Built-in Kotlin Gradle Plugin. Aggiornate anche una decina di dipendenze transitive (`win32`, `package_config`, `synchronized`, ecc.) alle ultime versioni risolvibili.
+- **`environment: sdk` alzato da `^3.7.0` a `^3.11.0`** in `pubspec.yaml`, per riflettere il vincolo reale ora imposto da `wakelock_plus`.
+- **Rimosso di nuovo `android.builtInKotlin=false`** da `android/gradle.properties`: era stato reintrodotto da un tool di migrazione Flutter dopo essere già stato tolto una prima volta, disattivando di fatto il Built-in Kotlin di AGP 9 nonostante il commento nel file dicesse il contrario. Verificato con una build reale (`flutter build apk --release`).
+- **Flutter aggiornato a 3.44.9** in locale e nella CI (`FLUTTER_VERSION` in `ci.yml`/`release.yml`), allineando l'ambiente di sviluppo a quello di build.
+
 ## [2.5.0] - 2026-08-05
 
 Release dedicata al ciclo di rilascio e alla proprietà dei dati: le build ufficiali si generano da sole su GitHub, i dati si portano via in un file, e l'ultimo pezzo di Firebase è andato.

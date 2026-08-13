@@ -113,7 +113,10 @@ class _AddEditChronoScreenState extends State<AddEditChronoScreen> {
   late int _poolLength;
   String _style = 'Freestyle';
   int? _distance;
-  String _chronoType = 'Training';
+  // Nullable di proposito: nessun default silenzioso alla creazione di un
+  // nuovo cronometro, l'allenatore deve scegliere esplicitamente Allenamento
+  // o Gara prima di salvare (vedi validator sul FormField più sotto).
+  String? _chronoType;
   final _finalTimeController = TextEditingController();
   final _notesController = TextEditingController();
   final _finalTimeFormatter = TimeInputFormatter();
@@ -418,7 +421,9 @@ class _AddEditChronoScreenState extends State<AddEditChronoScreen> {
         finalTimeMs: _finalTimeMs,
         splits: validSplits,
         notes: _notesController.text,
-        type: _chronoType,
+        // Non-null garantito: il FormField sul SegmentedButton ha già
+        // validato che sia stato scelto un tipo prima di arrivare qui.
+        type: _chronoType!,
       );
 
       final db = context.read<DatabaseRepository>();
@@ -505,7 +510,10 @@ class _AddEditChronoScreenState extends State<AddEditChronoScreen> {
               // A ListTile that acts as a button to open the date picker.
               ListTile(
                 title: Text(l10n.date),
-                subtitle: Text(DateFormat.yMMMd().format(_selectedDate)),
+                subtitle: Text(
+                  DateFormat.yMMMd(Localizations.localeOf(context).toString())
+                      .format(_selectedDate),
+                ),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: () async {
                   final pickedDate = await showDatePicker(
@@ -522,15 +530,46 @@ class _AddEditChronoScreenState extends State<AddEditChronoScreen> {
                   }
                 },
               ),
-              // Dropdown for selecting the chrono type (Race or Training).
-              DropdownButtonFormField<String>(
-                initialValue: _chronoType,
-                decoration: InputDecoration(labelText: l10n.chronoType),
-                items: typeDisplayNames.keys.map((t) => DropdownMenuItem(value: t, child: Text(typeDisplayNames[t]!))).toList(),
-                onChanged: (value) => setState(() {
-                  _chronoType = value!;
-                  _markDirty(true);
-                }),
+              // Scelta binaria Allenamento/Gara: un SegmentedButton comunica
+              // meglio di un dropdown che è "o l'uno o l'altro", e può
+              // partire senza nulla selezionato (emptySelectionAllowed),
+              // così l'allenatore è costretto a scegliere esplicitamente
+              // alla creazione. In modifica arriva già precompilato con
+              // chrono.type (vedi initState) e il comportamento non cambia.
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: FormField<String>(
+                  initialValue: _chronoType,
+                  validator: (value) => value == null ? l10n.requiredField : null,
+                  builder: (field) {
+                    return InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: l10n.chronoType,
+                        errorText: field.errorText,
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: SegmentedButton<String>(
+                          emptySelectionAllowed: true,
+                          segments: typeDisplayNames.entries
+                              .map((e) => ButtonSegment(value: e.key, label: Text(e.value)))
+                              .toList(),
+                          selected: _chronoType == null ? const <String>{} : {_chronoType!},
+                          onSelectionChanged: (selection) {
+                            final newType = selection.isEmpty ? null : selection.first;
+                            setState(() {
+                              _chronoType = newType;
+                              _markDirty(true);
+                            });
+                            field.didChange(newType);
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
               // Dropdown for selecting the pool length.
               DropdownButtonFormField<int>(

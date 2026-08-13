@@ -235,6 +235,9 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get dangerZone => 'Zona Pericolosa';
+
+  @override
   String get deleteData => 'Reset Dati App';
 
   @override

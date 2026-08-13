@@ -16,7 +16,7 @@ concurrency:
 
 env:
   # Unico punto in cui bumpare la versione di Flutter (allineata a release.yml).
-  FLUTTER_VERSION: '3.44.7'
+  FLUTTER_VERSION: '3.44.9'
 
 jobs:
   analyze:
